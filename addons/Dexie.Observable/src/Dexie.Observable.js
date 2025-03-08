@@ -464,6 +464,14 @@ function Observable(db) {
                 // Cleanup old revisions that no node is interested of.
                 Observable.deleteOldChanges(db);
                 return db.on("cleanup").fire(weBecameMaster);
+            }).then(function(result) {
+                // Refresh the in-memory local sync node so that isMaster is updated.
+                return db._syncNodes.get(mySyncNode.node.id).then(function(updatedNode) {
+                    if (updatedNode) {
+                        mySyncNode.node = updatedNode;
+                    }
+                    return result;
+                });
             });
         });
     }
