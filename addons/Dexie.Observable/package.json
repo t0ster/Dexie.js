@@ -2,10 +2,10 @@
   "name": "dexie-observable",
   "version": "4.0.1-beta.13",
   "description": "Addon to Dexie that makes it possible to observe database changes no matter if they occur on other db instance or other window.",
-  "main": "dist/dexie-observable.js",
-  "module": "dist/dexie-observable.es.js",
-  "jsnext:main": "dist/dexie-observable.es.js",
-  "typings": "dist/dexie-observable.d.ts",
+  "main": "src/Dexie.Observable.js",
+  "module": "src/Dexie.Observable.js",
+  "jsnext:main": "src/Dexie.Observable.js",
+  "typings": "src/Dexie.Observable.d.ts",
   "jspm": {
     "format": "cjs",
     "ignore": [
@@ -55,7 +55,7 @@
     ],
     "dexie-observable": [
       "# Build UMD module",
-      "tsc --allowJs -t es5 -m es2015 --outDir tools/tmp/es5/src/ --sourceMap src/Dexie.Observable.js [--watch 'Compilation complete.']",
+      "tsc --allowJs --moduleResolution node -t es5 -m es2015 --outDir tools/tmp/es5/src/ --sourceMap src/Dexie.Observable.js [--watch 'Compilation complete.']",
       "rollup -c tools/build-configs/rollup.config.js",
       "node tools/replaceVersionAndDate.js dist/dexie-observable.js",
       "# eslint ",
@@ -80,12 +80,8 @@
     ]
   },
   "homepage": "https://dexie.org",
-  "peerDependencies": {
-    "dexie": "workspace:^3.0.2 || ^4.0.1"
-  },
   "devDependencies": {
     "@types/node": "^18.11.18",
-    "dexie": "workspace:^3.0.2 || ^4.0.1",
     "eslint": "^7.27.0",
     "just-build": "^0.9.24",
     "qunit": "^2.9.2",

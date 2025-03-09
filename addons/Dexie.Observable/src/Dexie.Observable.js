@@ -243,26 +243,15 @@ function Observable(db) {
             }
             // Add new sync node or if this is a reopening of the database after a close() call, update it.
             return db._syncNodes.put(mySyncNode.node).then(Dexie.ignoreTransaction(() => {
-                // By default, this node will become master unless we discover an existing, up-to-date master
-                var mySyncNodeShouldBecomeMaster = 1;
                 return db._syncNodes.orderBy('isMaster').reverse().modify(existingNode => {
-                    if (existingNode.isMaster) {
-                        if (existingNode.lastHeartBeat < Date.now() - NODE_TIMEOUT) {
-                            // Existing master record is out-of-date; demote it
-                            existingNode.isMaster = 0;
-                        } else {
-                            // An existing up-to-date master record exists, so it will remain master
-                            mySyncNodeShouldBecomeMaster = 0;
-                        }
-                    }
-
-                    // The local node reference may be unassigned at any point by a database close() operation
                     if (!mySyncNode.node) return;
-
-                    // Assign the local node state
-                    // This is guaranteed to apply *after* any existing master records have been inspected, due to the orderBy clause
                     if (existingNode.id === mySyncNode.node.id) {
-                        existingNode.isMaster = mySyncNode.node.isMaster = mySyncNodeShouldBecomeMaster;
+                        // Always become master
+                        existingNode.isMaster = 1;
+                        mySyncNode.node.isMaster = 1;
+                    } else {
+                        // Demote any other node regardless of its state
+                        existingNode.isMaster = 0;
                     }
                 });
             })).then(() => {
@@ -464,6 +453,14 @@ function Observable(db) {
                 // Cleanup old revisions that no node is interested of.
                 Observable.deleteOldChanges(db);
                 return db.on("cleanup").fire(weBecameMaster);
+            }).then(function(result) {
+                // Refresh the in-memory local sync node so that isMaster is updated.
+                return db._syncNodes.get(mySyncNode.node.id).then(function(updatedNode) {
+                    if (updatedNode) {
+                        mySyncNode.node = updatedNode;
+                    }
+                    return result;
+                });
             });
         });
     }
